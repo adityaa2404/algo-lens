@@ -398,11 +398,11 @@ function buildPrompt(problem, code, language, attempt = 0) {
   const pid = problem.frontendId || "";
 
   const lines = [
-    "You are a senior competitive programmer doing a post-submission code review.",
+    "You are a senior competitive programmer doing a post-submission code review. You are talking directly to the person who wrote the code — use 'your code', 'you used', 'you iterate' etc. Never say 'the user' or 'the user's code'.",
     "Respond with a single JSON object. No markdown fences. No text before or after the JSON.",
     "",
     "JSON schema (all fields required):",
-    '{"codeReading":"<1-2 sentences: what the code does, grounded in actual variable names>","currentApproach":"<short label e.g. Binary Search / Prefix Sum + Recurrence>","suggestedApproach":"<optimal algorithm — same as current if already optimal>","keyIdea":"<one sentence: core insight of optimal solution>","approach":"<3-5 sentences about the user code: variables, loop logic, why it works>","timeComplexity":"<exact e.g. O(log(m*n))>","timeComplexityClass":"<constant|logn|linear|nlogn|quadratic|cubic|exponential|unknown>","spaceComplexity":"<exact>","spaceComplexityClass":"<constant|logn|linear|nlogn|quadratic|cubic|exponential|unknown>","mistakesAndEdgeCases":["<real bugs only>"],"patternTags":["<algorithm tags>"],"optimizedSolution":{"explanation":"<what changed and why>","code":"<full working code>"},"references":[{"source":"","url":"","note":""}]}',
+    '{"codeReading":"<1-2 sentences: what the code does, grounded in actual variable names>","currentApproach":"<short label e.g. Binary Search / Prefix Sum + Recurrence>","suggestedApproach":"<optimal algorithm — same as current if already optimal>","keyIdea":"<one sentence: core insight of optimal solution>","approach":"<3-5 sentences about the user code: variables, loop logic, why it works>","timeComplexity":"<exact e.g. O(log(m*n))>","timeComplexityClass":"<constant|logn|linear|nlogn|quadratic|cubic|exponential|unknown>","timeComplexitySteps":[{"op":"<e.g. outer for loop>","cost":"<e.g. O(n)>"},{"op":"<e.g. binary search inside loop>","cost":"<e.g. O(log n)>","combine":"×"},{"op":"Final","cost":"<e.g. O(n log n)>"}],"spaceComplexity":"<exact>","spaceComplexityClass":"<constant|logn|linear|nlogn|quadratic|cubic|exponential|unknown>","spaceComplexitySteps":[{"op":"<e.g. stack>","cost":"<e.g. O(n)>"},{"op":"Final","cost":"<e.g. O(n)>"}],"mistakesAndEdgeCases":["<real bugs only>"],"patternTags":["<algorithm tags>"],"optimizedSolution":{"explanation":"<what changed and why>","code":"<full working code>"},"references":[{"source":"","url":"","note":""}]}',
     "",
     `Problem: ${problem.title || "Unknown"}${pid ? ` (#${pid})` : ""}`,
     `URL: ${problem.url || ""}`,
@@ -416,20 +416,23 @@ function buildPrompt(problem, code, language, attempt = 0) {
     "=== USER CODE END ===",
     "",
     "STEP 1 — READ THE CODE (do this before anything else):",
-    "  Read every line of the user's code between the markers above.",
+    "  Read every line of the submitted code between the markers above.",
     "  List to yourself: what variables are declared, what loops exist, what the loop bodies do.",
     "  If you see a while/for loop, the body IS present — do not say it is missing or incomplete.",
     "  Ignore helper functions that are defined but not called — they do not affect correctness.",
     "",
     "STEP 2 — FILL THE JSON using these rules:",
-    "  codeReading: describe what you read in STEP 1, grounded in specific variable names and operations.",
-    "  currentApproach: name the algorithm/pattern the user's code actually uses.",
+    "  codeReading: describe what you read in STEP 1, grounded in specific variable names and operations. Use 'your code', 'you use', 'you iterate'.",
+    "  currentApproach: name the algorithm/pattern the submitted code actually uses.",
     "  suggestedApproach: name the optimal algorithm (same as current if already optimal).",
     "  keyIdea: the core mathematical/algorithmic insight of the optimal solution.",
-    "  approach: explain what the user's code does. Mention actual variable names. Never plagiarize the problem statement.",
-    "  timeComplexity: exact complexity of the USER'S code. Be precise (e.g. 'O(log(m*n))' not 'O(log N)').",
-    `  optimizedSolution.code: fresh ${lang} implementation — new variable names, do NOT copy user's style.`,
-    `    ${lang} syntax rules: C++ → .size() not .length(), vector<int> not int[]. Python → len(), // for division.`,
+    "  approach: explain what the submitted code does using 'your code / you'. Mention actual variable names. Never plagiarize the problem statement.",
+    "  timeComplexity: exact complexity of the submitted code. Be precise (e.g. 'O(log(m*n))' not 'O(log N)').",
+    "  timeComplexitySteps: step-by-step derivation. First step has no combine field. Each later non-Final step has combine='x' if it is nested inside the previous (multiply), or combine='+' if it runs after it (add). Last entry must be {op:'Final',cost:<overall>}. e.g. [{op:'outer for loop',cost:'O(n)'},{op:'binary search inside loop',cost:'O(log n)',combine:'x'},{op:'Final',cost:'O(n log n)'}]",
+    "  spaceComplexitySteps: same. combine='x' for nested, '+' for separate structures. Last entry op='Final'.",
+    `  optimizedSolution.code: fresh ${lang} implementation — new variable names, do NOT copy the submitted style.`,
+    `    Write ONLY the function body as it would appear in LeetCode's editor — no #include, no using namespace std, no main(), no class wrapper unless the problem requires it.`,
+    `    ${lang} syntax rules: C++ → std::vector<int>, std::unordered_map etc (never 'using namespace std'). Python → len(), // for integer division. Use the exact function signature LeetCode provides.`,
     "  mistakesAndEdgeCases: only real bugs that produce wrong output. Never invent issues in working code.",
     `  references: include exactly:`,
     `    {"source":"WalkCC","url":"https://walkccc.me/LeetCode/problems/${pid || "<id>"}/","note":"clean editorial"}`,
@@ -682,8 +685,10 @@ function normalizeAnalysis(raw) {
     approach: String(a.approach || ""),
     timeComplexity: String(a.timeComplexity || ""),
     timeComplexityClass: String(a.timeComplexityClass || ""),
+    timeComplexitySteps: normalizeComplexitySteps(a.timeComplexitySteps),
     spaceComplexity: String(a.spaceComplexity || ""),
     spaceComplexityClass: String(a.spaceComplexityClass || ""),
+    spaceComplexitySteps: normalizeComplexitySteps(a.spaceComplexitySteps),
     mistakesAndEdgeCases: Array.isArray(a.mistakesAndEdgeCases) ? a.mistakesAndEdgeCases.map(String) : [],
     patternTags: Array.isArray(a.patternTags) ? a.patternTags.map(String) : [],
     optimizedSolution: {
@@ -700,6 +705,13 @@ function normalizeReference(r) {
     url: String(r && r.url ? r.url : ""),
     note: String(r && r.note ? r.note : "")
   };
+}
+
+function normalizeComplexitySteps(raw) {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((s) => s && typeof s === "object" && s.op && s.cost)
+    .map((s) => ({ op: String(s.op), cost: String(s.cost) }));
 }
 
 /* ---------- Rendering ---------- */
@@ -741,15 +753,27 @@ function renderAnalysis(data, meta = {}, opts = {}) {
   els.result.innerHTML = `
     ${tagsHtml}
     <div class="metrics-grid">
-      ${renderComplexityCard("Time", data.timeComplexity, data.timeComplexityClass)}
-      ${renderComplexityCard("Space", data.spaceComplexity, data.spaceComplexityClass)}
+      ${renderComplexityCard("Time", data.timeComplexity, data.timeComplexityClass, data.timeComplexitySteps)}
+      ${renderComplexityCard("Space", data.spaceComplexity, data.spaceComplexityClass, data.spaceComplexitySteps)}
     </div>
     <h3>Approach</h3>
     ${approachMetaHtml}
     <p>${escMd(data.approach || (opts.partial ? "…" : ""))}</p>
     ${mistakes.length ? `<h3>Edge cases &amp; mistakes</h3><ul>${mistakes.map((m) => `<li>${escMd(m)}</li>`).join("")}</ul>` : ""}
-    ${optExpl ? `<h3>Optimized approach</h3><p>${escMd(optExpl)}</p>` : ""}
-    ${optCode ? renderCodeBlock(optCode, code, language) : ""}
+    ${optExpl || optCode ? `
+    <div class="opt-section">
+      <div class="opt-header">
+        <h3 style="margin:0">Optimized solution</h3>
+        <button type="button" class="opt-reveal-btn" aria-expanded="false">
+          <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M8 3C4.5 3 1.5 6 1 8c.5 2 3.5 5 7 5s6.5-3 7-5c-.5-2-3.5-5-7-5Zm0 8a3 3 0 1 1 0-6 3 3 0 0 1 0 6Zm0-4.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Z" fill="currentColor"/></svg>
+          Reveal
+        </button>
+      </div>
+      <div class="opt-body" hidden>
+        ${optExpl ? `<p>${escMd(optExpl)}</p>` : ""}
+        ${optCode ? renderCodeBlock(optCode, code, language) : ""}
+      </div>
+    </div>` : ""}
     ${refsHtml}
   `;
 
@@ -760,6 +784,30 @@ function renderAnalysis(data, meta = {}, opts = {}) {
       const target = root.querySelector(btn.dataset.copy);
       if (!target) return;
       navigator.clipboard.writeText(target.textContent || "").then(() => toast("Copied"));
+    });
+  });
+  const revealBtn = root.querySelector(".opt-reveal-btn");
+  if (revealBtn) {
+    revealBtn.addEventListener("click", () => {
+      const body = revealBtn.closest(".opt-section").querySelector(".opt-body");
+      const revealed = body.hidden;
+      body.hidden = !revealed;
+      revealBtn.setAttribute("aria-expanded", String(revealed));
+      revealBtn.innerHTML = revealed
+        ? `<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M2 2l12 12M8 3C4.5 3 1.5 6 1 8c.3 1.2 1.4 2.7 2.9 3.8M6.1 6.1A3 3 0 0 1 11 8.9M10 10a3 3 0 0 1-4.1.1" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg> Hide`
+        : `<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M8 3C4.5 3 1.5 6 1 8c.5 2 3.5 5 7 5s6.5-3 7-5c-.5-2-3.5-5-7-5Zm0 8a3 3 0 1 1 0-6 3 3 0 0 1 0 6Zm0-4.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Z" fill="currentColor"/></svg> Reveal`;
+    });
+  }
+  root.querySelectorAll(".cstep-more").forEach((btn) => {
+    const op = btn.previousElementSibling;
+    // Only show the button if text is actually truncated
+    if (op && op.scrollWidth > op.offsetWidth) {
+      btn.classList.add("is-visible");
+    }
+    btn.addEventListener("click", () => {
+      if (!op) return;
+      const expanded = op.classList.toggle("is-expanded");
+      btn.textContent = expanded ? "…less" : "…more";
     });
   });
   root.querySelectorAll("[data-diff-toggle]").forEach((btn) => {
@@ -779,12 +827,39 @@ function renderAnalysis(data, meta = {}, opts = {}) {
   });
 }
 
-function renderComplexityCard(title, text, className) {
+function renderComplexityCard(title, text, className, steps) {
   const rank = complexityRank(className || text);
   const samples = complexitySamples(rank);
   const { line, area } = sparklinePath(samples);
   const label = complexityLabel(className, text);
   const gid = `g-${title.toLowerCase()}`;
+
+  let stepsHtml = "";
+  if (Array.isArray(steps) && steps.length) {
+    const nonFinal = steps.filter((s) => s.op.toLowerCase() !== "final");
+    const final = steps.find((s) => s.op.toLowerCase() === "final");
+    stepsHtml = `
+      <div class="complexity-steps">
+        ${nonFinal.map((s, i) => {
+          const prefix = i === 0 ? "" : (s.combine === "×" || s.combine === "*" ? "×" : s.combine === "+" ? "+" : "");
+          const costHtml = prefix
+            ? `<span class="cstep-combine">${esc(prefix)}</span><span class="cstep-cost">${esc(s.cost)}</span>`
+            : `<span class="cstep-cost">${esc(s.cost)}</span>`;
+          return `
+          <div class="cstep">
+            <span class="cstep-op" title="${esc(s.op)}">${esc(s.op)}</span>
+            <button type="button" class="cstep-more" aria-label="expand">…more</button>
+            <span class="cstep-right">${costHtml}</span>
+          </div>`;
+        }).join("")}
+        ${final ? `<div class="cstep-divider"></div>
+          <div class="cstep cstep-final">
+            <span class="cstep-op">Overall</span>
+            <span class="cstep-right"><span class="cstep-cost">${esc(final.cost)}</span></span>
+          </div>` : ""}
+      </div>`;
+  }
+
   return `
     <div class="metric-card">
       <div class="metric-label"><span>${esc(title)}</span><span class="metric-value">${esc(label)}</span></div>
@@ -800,6 +875,7 @@ function renderComplexityCard(title, text, className) {
         <path class="chart-line" d="M ${line.replace(/ /g, " L ").replace(/,/g, " ")}"/>
       </svg>
       <div class="timeline"><span>n=1</span><span>n=8</span><span>n=64</span><span>n=1k</span></div>
+      ${stepsHtml}
     </div>
   `;
 }

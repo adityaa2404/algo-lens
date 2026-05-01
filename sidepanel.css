@@ -344,6 +344,31 @@ textarea {
 }
 .result p { margin: 0 0 8px; color: var(--text); }
 
+/* ---------- Optimized solution reveal ---------- */
+.opt-section { margin: 14px 0 0; }
+.opt-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.opt-reveal-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(126,225,255,0.08);
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 12px;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+.opt-reveal-btn:hover { background: rgba(126,225,255,0.16); }
+
+/* ---------- Approach meta ---------- */
 .approach-meta {
   display: flex;
   flex-direction: column;
@@ -419,6 +444,79 @@ textarea {
   display: flex; justify-content: space-between;
   font-size: 10px; color: var(--muted);
   margin-top: 4px;
+}
+.complexity-steps {
+  margin-top: 8px;
+  border-top: 1px solid var(--border);
+  padding-top: 7px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.cstep {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 11px;
+  gap: 6px;
+}
+.cstep-op {
+  color: var(--muted);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cstep-op.is-expanded {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+}
+.cstep-more {
+  display: none;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: var(--accent);
+  font-size: 10px;
+  flex-shrink: 0;
+  opacity: 0.75;
+  line-height: 1;
+}
+.cstep-more.is-visible { display: inline; }
+.cstep-more:hover { opacity: 1; }
+.cstep-right {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+}
+.cstep-combine {
+  color: var(--warning);
+  font-weight: 700;
+  font-size: 11px;
+}
+.cstep-cost {
+  color: var(--accent);
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  font-size: 10.5px;
+  flex-shrink: 0;
+}
+.cstep-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 3px 0;
+}
+.cstep-final .cstep-op {
+  color: var(--text);
+  font-weight: 600;
+}
+.cstep-final .cstep-cost {
+  color: var(--accent-strong);
+  font-weight: 700;
+  font-size: 11.5px;
 }
 
 /* ---------- Code block ---------- */
