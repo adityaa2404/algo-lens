@@ -30,16 +30,7 @@ git clone https://github.com/algolens/algolens.git
 cd algolens
 ```
 
-### 2. Generate icons
-
-```
-pip install Pillow
-python scripts/generate_icons.py
-```
-
-This writes `icons/icon16.png`, `icon32.png`, `icon48.png`, `icon128.png`.
-
-### 3. Load the extension in Chrome
+### 2. Load the extension in Chrome
 
 1. Open `chrome://extensions` in Chrome.
 2. Enable **Developer mode** (top-right toggle).
@@ -47,7 +38,7 @@ This writes `icons/icon16.png`, `icon32.png`, `icon48.png`, `icon128.png`.
 4. The onboarding tab opens automatically.
 5. Paste your Gemini API key and click **Save & verify**.
 
-### 4. Use it
+### 3. Use it
 
 - Open any LeetCode problem page.
 - Click the floating **Analyze** button injected next to the editor, or
