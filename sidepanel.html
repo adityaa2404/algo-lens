@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Algo Lens</title>
+    <link rel="stylesheet" href="sidepanel.css" />
+  </head>
+  <body data-view="analyze">
+    <header class="topbar">
+      <div class="brand">
+        <img src="icons/icon32.png" alt="" width="22" height="22" />
+        <div>
+          <strong>Algo Lens</strong>
+          <span class="brand-sub" id="brandSub">Ready</span>
+        </div>
+      </div>
+      <nav class="tabs" role="tablist">
+        <button class="tab is-active" data-tab="analyze" role="tab" aria-selected="true">Analyze</button>
+        <button class="tab" data-tab="history" role="tab" aria-selected="false">History</button>
+        <button class="tab" data-tab="settings" role="tab" aria-selected="false">Settings</button>
+      </nav>
+    </header>
+
+    <main>
+      <section id="view-analyze" class="view is-active" role="tabpanel">
+        <div class="problem-card" id="problemCard" hidden>
+          <div class="problem-header">
+            <span class="chip" id="problemId">#—</span>
+            <span class="chip muted" id="problemLang">—</span>
+          </div>
+          <h2 id="problemTitle">—</h2>
+          <a id="problemLink" class="problem-link" href="#" target="_blank" rel="noreferrer noopener">Open on LeetCode ↗</a>
+        </div>
+
+        <div class="cta-row">
+          <button id="analyzeBtn" class="primary">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M7 1a6 6 0 1 0 3.88 10.59l3.02 3.02a1 1 0 0 0 1.41-1.41l-3.02-3.02A6 6 0 0 0 7 1Zm0 2a4 4 0 1 1 0 8 4 4 0 0 1 0-8Z"/></svg>
+            <span>Analyze current solution</span>
+          </button>
+          <button id="stopBtn" class="ghost" hidden>Stop</button>
+        </div>
+
+        <p class="hint" id="hint">Shortcut: <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd></p>
+
+        <div id="skeleton" class="skeleton" hidden>
+          <div class="sk sk-pill"></div>
+          <div class="sk sk-pill short"></div>
+          <div class="sk sk-card"></div>
+          <div class="sk sk-line"></div>
+          <div class="sk sk-line short"></div>
+          <div class="sk sk-card"></div>
+        </div>
+
+        <div id="result" class="result" aria-live="polite"></div>
+
+        <details id="manualWrap" class="manual">
+          <summary>Paste code manually (if extraction fails)</summary>
+          <textarea id="manualCode" rows="6" placeholder="# paste your solution here"></textarea>
+        </details>
+
+        <details id="debugWrap" class="manual">
+          <summary>Debug log</summary>
+          <div class="debug-row">
+            <button id="refreshDebug" type="button" class="ghost">Refresh</button>
+            <button id="copyDebug" type="button" class="ghost">Copy</button>
+            <button id="clearDebug" type="button" class="ghost">Clear</button>
+          </div>
+          <pre id="debugDump" class="debug-dump">(click Analyze, then Refresh)</pre>
+        </details>
+      </section>
+
+      <section id="view-history" class="view" role="tabpanel">
+        <input id="historySearch" class="search" type="search" placeholder="Search history…" />
+        <ul id="historyList" class="history-list"></ul>
+        <p id="historyEmpty" class="empty" hidden>No analyses yet. Run one to see it here.</p>
+      </section>
+
+      <section id="view-settings" class="view" role="tabpanel">
+        <label for="apiKey">Gemini API Key</label>
+        <div class="key-row">
+          <input id="apiKey" type="password" placeholder="AIza…" autocomplete="off" />
+          <button id="toggleKey" class="icon-btn" type="button" aria-label="Show or hide API key">👁</button>
+        </div>
+        <p class="microcopy">
+          Don't have one? <a href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer noopener">Get a free Gemini key ↗</a>
+        </p>
+
+        <label for="modelSelect">Model</label>
+        <select id="modelSelect">
+          <option value="gemini-3-flash-preview">gemini-3-flash-preview (best multimodal, most powerful)</option>
+          <option value="gemini-3.1-pro-preview">gemini-3.1-pro-preview (latest Pro preview)</option>
+          <option value="gemini-2.5-pro">gemini-2.5-pro (proven quality)</option>
+          <option value="gemini-pro-latest">gemini-pro-latest (latest stable Pro)</option>
+          <option value="gemini-1.5-pro">gemini-1.5-pro (stable Pro)</option>
+          <option value="gemini-flash-latest">gemini-flash-latest (fast, budget)</option>
+          <option value="gemini-2.5-flash">gemini-2.5-flash (newer Flash)</option>
+          <option value="gemini-2.0-flash">gemini-2.0-flash (stable Flash)</option>
+          <option value="gemini-2.5-flash-lite">gemini-2.5-flash-lite (cheapest)</option>
+        </select>
+        <p class="microcopy">Preview models are cutting-edge but may have limited quota. If quota-limited, try switching models.</p>
+
+        <label class="switch">
+          <input id="streamToggle" type="checkbox" checked />
+          <span>Stream responses as they arrive</span>
+        </label>
+
+        <label class="switch">
+          <input id="autoAnalyzeToggle" type="checkbox" />
+          <span>Auto-analyze on submit (experimental)</span>
+        </label>
+
+        <div class="settings-actions">
+          <button id="saveBtn" class="primary">Save</button>
+          <button id="clearHistoryBtn" class="danger">Clear history</button>
+        </div>
+        <p class="microcopy">
+          Your key lives only in this browser (chrome.storage.local). Nothing is sent to our servers.
+        </p>
+        <p class="microcopy subtle">
+          v<span id="version">1.0.0</span> · <a href="#" id="privacyLink">Privacy</a> · <a href="https://github.com/algolens/algolens" target="_blank" rel="noreferrer noopener">Source</a>
+        </p>
+      </section>
+    </main>
+
+    <div id="toast" class="toast" hidden></div>
+
+    <footer class="app-footer">
+      <a class="footer-feedback" href="https://forms.gle/fRNNMi8B4E5a8G9h6" target="_blank" rel="noreferrer noopener">
+        <svg viewBox="0 0 16 16" aria-hidden="true" width="13" height="13"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1Zm0 3a1 1 0 1 1 0 2 1 1 0 0 1 0-2Zm0 3.5c.28 0 .5.22.5.5v3a.5.5 0 0 1-1 0V8c0-.28.22-.5.5-.5Z" fill="currentColor"/></svg>
+        Give feedback
+      </a>
+      <span class="footer-divider">·</span>
+      <span class="footer-credit">
+        vibecoded with <span class="footer-heart">♥</span> by
+        <a href="https://www.linkedin.com/in/adityapotdar24" target="_blank" rel="noreferrer noopener">Aditya</a>
+      </span>
+    </footer>
+
+    <script src="sidepanel.js"></script>
+  </body>
+</html>

@@ -1,0 +1,55 @@
+#algolens-inline-btn {
+  position: fixed;
+  right: 18px;
+  bottom: 22px;
+  z-index: 2147483000;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px 10px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(126, 225, 255, 0.45);
+  background: linear-gradient(135deg, #7ee1ff, #54c4ff);
+  color: #052033;
+  font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  box-shadow: 0 16px 32px rgba(10, 18, 30, 0.38), 0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+}
+
+#algolens-inline-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 20px 36px rgba(10, 18, 30, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.12) inset;
+  filter: brightness(1.05);
+}
+
+#algolens-inline-btn:active { transform: translateY(0); }
+
+#algolens-inline-btn .algolens-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #0b1930;
+  box-shadow: 0 0 0 3px rgba(11, 25, 48, 0.15);
+}
+
+#algolens-inline-btn.is-busy .algolens-dot {
+  background: transparent;
+  border: 2px solid rgba(11, 25, 48, 0.4);
+  border-top-color: #0b1930;
+  animation: algolens-spin 0.7s linear infinite;
+}
+
+#algolens-inline-btn .algolens-label { white-space: nowrap; }
+
+@keyframes algolens-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #algolens-inline-btn { transition: none; }
+  #algolens-inline-btn.is-busy .algolens-dot { animation: none; }
+}

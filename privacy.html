@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Algo Lens — Privacy</title>
+    <link rel="stylesheet" href="onboarding.css" />
+    <style>
+      .wrap { max-width: 640px; padding-top: 32px; }
+      h2 { margin-top: 28px; font-size: 17px; color: var(--accent); }
+      p, li { color: var(--text); font-size: 14px; }
+      ul { padding-left: 20px; }
+      .muted { color: var(--muted); font-size: 13px; }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <header>
+        <h1 style="margin:0 0 6px;font-size:26px;">Privacy Policy</h1>
+        <p class="muted">Last updated: April 17, 2026</p>
+      </header>
+
+      <p>
+        Algo Lens is a <strong>bring-your-own-key</strong> extension. We don't run servers, and we don't collect,
+        transmit, or sell any personal data. This page explains exactly what stays on your device and what
+        leaves it.
+      </p>
+
+      <h2>What stays on your device</h2>
+      <ul>
+        <li>Your Gemini API key (stored via <code>chrome.storage.local</code>).</li>
+        <li>Your model and UI preferences (streaming toggle, auto-analyze, etc.).</li>
+        <li>Up to 25 most-recent analyses (problem title, your code, Gemini's response, timestamp).</li>
+        <li>An optional manual code snippet you paste into the fallback box.</li>
+      </ul>
+      <p class="muted">You can wipe all of it via <em>Settings → Clear history</em>, or by removing the extension.</p>
+
+      <h2>What leaves your device — and where it goes</h2>
+      <p>When you click <strong>Analyze</strong>, the following is sent directly to Google's Gemini API
+        (<code>generativelanguage.googleapis.com</code>) authenticated with your own key:</p>
+      <ul>
+        <li>The LeetCode problem title, URL, and description scraped from the current tab.</li>
+        <li>The code you wrote in the LeetCode editor (or pasted in the manual box).</li>
+        <li>The detected language.</li>
+      </ul>
+      <p>
+        Gemini's handling of that data is governed by <a href="https://ai.google.dev/gemini-api/terms" target="_blank" rel="noreferrer noopener">Google's Gemini API terms</a>
+        and <a href="https://policies.google.com/privacy" target="_blank" rel="noreferrer noopener">privacy policy</a>. We never see it —
+        the request goes browser → Google, end of story.
+      </p>
+
+      <h2>What we don't do</h2>
+      <ul>
+        <li>No analytics, telemetry, or crash reporting.</li>
+        <li>No remote code execution — no eval, no dynamic script loading.</li>
+        <li>No ad networks, no third-party SDKs.</li>
+        <li>No background scraping: we only read the page when you explicitly click Analyze.</li>
+      </ul>
+
+      <h2>Permissions, explained</h2>
+      <ul>
+        <li><code>activeTab</code> — read the current LeetCode tab when you invoke Analyze.</li>
+        <li><code>storage</code> — save your API key, preferences, and history locally.</li>
+        <li><code>sidePanel</code> — render the Algo Lens panel next to LeetCode.</li>
+        <li><code>scripting</code> — inject the floating Analyze button on problem pages.</li>
+        <li><code>contextMenus</code> — add the "Analyze snippet" right-click item.</li>
+        <li><code>https://leetcode.com/*</code> — to scrape the problem you're looking at.</li>
+        <li><code>https://generativelanguage.googleapis.com/*</code> — to call Gemini with your key.</li>
+      </ul>
+
+      <h2>Contact</h2>
+      <p class="muted">
+        Questions? Open an issue at
+        <a href="https://github.com/algolens/algolens/issues" target="_blank" rel="noreferrer noopener">github.com/algolens/algolens/issues</a>.
+      </p>
+    </main>
+  </body>
+</html>

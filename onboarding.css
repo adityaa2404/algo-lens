@@ -1,0 +1,166 @@
+:root {
+  --bg: #070b12;
+  --surface: #111a28;
+  --surface-alt: #182438;
+  --border: rgba(126, 225, 255, 0.16);
+  --text: #ecf3ff;
+  --muted: #9aaac8;
+  --accent: #7ee1ff;
+  --accent-strong: #54c4ff;
+  --success: #87f5b6;
+  --danger: #ff8da1;
+}
+
+* { box-sizing: border-box; }
+
+html, body { margin: 0; min-height: 100%; }
+
+body {
+  background:
+    radial-gradient(900px 500px at 15% 0%, rgba(84, 196, 255, 0.18), transparent 60%),
+    radial-gradient(800px 400px at 85% 10%, rgba(135, 245, 182, 0.12), transparent 60%),
+    linear-gradient(180deg, #050810 0%, var(--bg) 100%);
+  color: var(--text);
+  font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.wrap { max-width: 720px; margin: 0 auto; padding: 48px 24px 64px; }
+
+.hero { text-align: center; margin-bottom: 40px; }
+.hero img { border-radius: 12px; margin-bottom: 14px; }
+.hero h1 {
+  margin: 8px 0 6px;
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.lede { color: var(--muted); margin: 0 auto; max-width: 520px; }
+
+.steps { list-style: none; padding: 0; margin: 0 0 32px; display: grid; gap: 14px; }
+.step {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 16px;
+  padding: 18px 20px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: linear-gradient(160deg, rgba(18, 26, 39, 0.88), rgba(24, 34, 50, 0.94));
+}
+.step h2 { margin: 0 0 6px; font-size: 17px; font-weight: 600; }
+.step p { margin: 0 0 12px; color: var(--muted); font-size: 13px; }
+.step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px; height: 32px;
+  border-radius: 999px;
+  background: rgba(126, 225, 255, 0.12);
+  border: 1px solid rgba(126, 225, 255, 0.28);
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(126, 225, 255, 0.08);
+  border: 1px solid rgba(126, 225, 255, 0.24);
+  color: var(--text);
+  padding: 9px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  text-decoration: none;
+  transition: transform 0.12s, border-color 0.12s, background 0.12s;
+}
+.btn:hover { transform: translateY(-1px); border-color: var(--accent); }
+.btn.primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: #052033;
+  font-weight: 700;
+  border: 0;
+}
+
+.icon-btn {
+  width: 42px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.key-row { display: flex; gap: 6px; margin-bottom: 10px; }
+
+input {
+  flex: 1;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(10, 15, 25, 0.94);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+}
+input:focus { outline: none; border-color: var(--accent); }
+
+.status {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+.status.ok { color: var(--success); }
+.status.err { color: var(--danger); }
+code {
+  background: rgba(126, 225, 255, 0.08);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+kbd {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: 12px;
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin: 30px 0;
+}
+.tile {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  background: linear-gradient(180deg, rgba(15, 22, 33, 0.94), rgba(10, 15, 24, 0.96));
+}
+.tile h3 {
+  margin: 0 0 6px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+}
+.tile p { margin: 0; color: var(--muted); font-size: 13px; }
+
+.foot {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 28px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.foot a { color: var(--muted); }
+.foot a:hover { color: var(--accent); }
+.sep { opacity: 0.45; }
