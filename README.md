@@ -46,20 +46,6 @@ cd algolens
 - Press `Ctrl+Shift+L` (`Cmd+Shift+L` on Mac).
 - The side panel opens and analysis runs automatically.
 
-## Packaging for the Chrome Web Store
-
-```powershell
-# Windows PowerShell
-pwsh scripts/package.ps1
-```
-
-```bash
-# macOS / Linux
-bash scripts/package.sh
-```
-
-Produces `dist/algolens-<version>.zip` containing only the files Chrome needs — no backend, no scripts, no docs.
-
 ## Project layout
 
 ```
