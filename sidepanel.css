@@ -445,78 +445,41 @@ textarea {
   font-size: 10px; color: var(--muted);
   margin-top: 4px;
 }
-.complexity-steps {
-  margin-top: 8px;
-  border-top: 1px solid var(--border);
-  padding-top: 7px;
+/* ---------- Complexity reasoning block ---------- */
+.complexity-reasoning-block {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 10px;
+  margin: 4px 0 10px;
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
 }
-.cstep {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  font-size: 11px;
-  gap: 6px;
-}
-.cstep-op {
-  color: var(--muted);
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.cstep-op.is-expanded {
-  white-space: normal;
-  overflow: visible;
-  text-overflow: unset;
-}
-.cstep-more {
-  display: none;
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  color: var(--accent);
+.cr-section { display: flex; flex-direction: column; gap: 4px; }
+.cr-label {
   font-size: 10px;
-  flex-shrink: 0;
-  opacity: 0.75;
-  line-height: 1;
-}
-.cstep-more.is-visible { display: inline; }
-.cstep-more:hover { opacity: 1; }
-.cstep-right {
-  display: flex;
-  align-items: center;
-  gap: 3px;
-  flex-shrink: 0;
-}
-.cstep-combine {
-  color: var(--warning);
   font-weight: 700;
-  font-size: 11px;
-}
-.cstep-cost {
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   color: var(--accent);
-  font-family: "JetBrains Mono", "Fira Code", monospace;
-  font-size: 10.5px;
-  flex-shrink: 0;
 }
-.cstep-divider {
-  height: 1px;
-  background: var(--border);
-  margin: 3px 0;
+.cr-list {
+  margin: 0;
+  padding-left: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
-.cstep-final .cstep-op {
+.cr-list li {
+  font-size: 11.5px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.cr-list li.cr-overall {
   color: var(--text);
   font-weight: 600;
-}
-.cstep-final .cstep-cost {
-  color: var(--accent-strong);
-  font-weight: 700;
-  font-size: 11.5px;
+  margin-top: 2px;
 }
 
 /* ---------- Code block ---------- */

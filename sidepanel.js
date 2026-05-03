@@ -402,7 +402,7 @@ function buildPrompt(problem, code, language, attempt = 0) {
     "Respond with a single JSON object. No markdown fences. No text before or after the JSON.",
     "",
     "JSON schema (all fields required):",
-    '{"codeReading":"<1-2 sentences: what the code does, grounded in actual variable names>","currentApproach":"<short label e.g. Binary Search / Prefix Sum + Recurrence>","suggestedApproach":"<optimal algorithm — same as current if already optimal>","keyIdea":"<one sentence: core insight of optimal solution>","approach":"<3-5 sentences about the user code: variables, loop logic, why it works>","timeComplexity":"<exact e.g. O(log(m*n))>","timeComplexityClass":"<constant|logn|linear|nlogn|quadratic|cubic|exponential|unknown>","timeComplexitySteps":[{"op":"<e.g. outer for loop>","cost":"<e.g. O(n)>"},{"op":"<e.g. binary search inside loop>","cost":"<e.g. O(log n)>","combine":"×"},{"op":"Final","cost":"<e.g. O(n log n)>"}],"spaceComplexity":"<exact>","spaceComplexityClass":"<constant|logn|linear|nlogn|quadratic|cubic|exponential|unknown>","spaceComplexitySteps":[{"op":"<e.g. stack>","cost":"<e.g. O(n)>"},{"op":"Final","cost":"<e.g. O(n)>"}],"mistakesAndEdgeCases":["<real bugs only>"],"patternTags":["<algorithm tags>"],"optimizedSolution":{"explanation":"<what changed and why>","code":"<full working code>"},"references":[{"source":"","url":"","note":""}]}',
+    '{"codeReading":"<1-2 sentences: what the code does, grounded in actual variable names>","currentApproach":"<short label e.g. Binary Search / Prefix Sum + Recurrence>","suggestedApproach":"<optimal algorithm — same as current if already optimal>","keyIdea":"<one sentence: core insight of optimal solution>","approach":"<3-5 sentences about the user code: variables, loop logic, why it works>","timeComplexity":"<exact e.g. O(log(m*n))>","timeComplexityClass":"<constant|logn|linear|nlogn|quadratic|cubic|exponential|unknown>","timeComplexityReasoning":"<bullet breakdown: each function/loop and its cost, then overall — e.g. '- rev(n): O(log n) — processes each digit once\\n- loop over range [l,h]: up to O(n) iterations\\n- check(i) inside loop: O(√n) per call\\n- Overall: O(n√n)'>","spaceComplexity":"<exact>","spaceComplexityClass":"<constant|logn|linear|nlogn|quadratic|cubic|exponential|unknown>","spaceComplexityReasoning":"<same bullet style for space>","mistakesAndEdgeCases":["<real bugs only>"],"patternTags":["<algorithm tags>"],"optimizedSolution":{"explanation":"<what changed and why>","code":"<full working code>"},"references":[{"source":"","url":"","note":""}]}',
     "",
     `Problem: ${problem.title || "Unknown"}${pid ? ` (#${pid})` : ""}`,
     `URL: ${problem.url || ""}`,
@@ -428,8 +428,8 @@ function buildPrompt(problem, code, language, attempt = 0) {
     "  keyIdea: the core mathematical/algorithmic insight of the optimal solution.",
     "  approach: explain what the submitted code does using 'your code / you'. Mention actual variable names. Never plagiarize the problem statement.",
     "  timeComplexity: exact complexity of the submitted code. Be precise (e.g. 'O(log(m*n))' not 'O(log N)').",
-    "  timeComplexitySteps: step-by-step derivation. First step has no combine field. Each later non-Final step has combine='x' if it is nested inside the previous (multiply), or combine='+' if it runs after it (add). Last entry must be {op:'Final',cost:<overall>}. e.g. [{op:'outer for loop',cost:'O(n)'},{op:'binary search inside loop',cost:'O(log n)',combine:'x'},{op:'Final',cost:'O(n log n)'}]",
-    "  spaceComplexitySteps: same. combine='x' for nested, '+' for separate structures. Last entry op='Final'.",
+    "  timeComplexityReasoning: bullet-point breakdown using '- label: cost — reason' per line. Cover each major function/loop separately, then end with '- Overall: <complexity>'. Use \\n between bullets. Be specific to the actual code.",
+    "  spaceComplexityReasoning: same bullet style. Cover each data structure or call stack, then '- Overall: <complexity>'.",
     `  optimizedSolution.code: fresh ${lang} implementation — new variable names, do NOT copy the submitted style.`,
     `    Write ONLY the function body as it would appear in LeetCode's editor — no #include, no using namespace std, no main(), no class wrapper unless the problem requires it.`,
     `    ${lang} syntax rules: C++ → std::vector<int>, std::unordered_map etc (never 'using namespace std'). Python → len(), // for integer division. Use the exact function signature LeetCode provides.`,
@@ -685,10 +685,10 @@ function normalizeAnalysis(raw) {
     approach: String(a.approach || ""),
     timeComplexity: String(a.timeComplexity || ""),
     timeComplexityClass: String(a.timeComplexityClass || ""),
-    timeComplexitySteps: normalizeComplexitySteps(a.timeComplexitySteps),
+    timeComplexityReasoning: String(a.timeComplexityReasoning || ""),
     spaceComplexity: String(a.spaceComplexity || ""),
     spaceComplexityClass: String(a.spaceComplexityClass || ""),
-    spaceComplexitySteps: normalizeComplexitySteps(a.spaceComplexitySteps),
+    spaceComplexityReasoning: String(a.spaceComplexityReasoning || ""),
     mistakesAndEdgeCases: Array.isArray(a.mistakesAndEdgeCases) ? a.mistakesAndEdgeCases.map(String) : [],
     patternTags: Array.isArray(a.patternTags) ? a.patternTags.map(String) : [],
     optimizedSolution: {
@@ -707,12 +707,6 @@ function normalizeReference(r) {
   };
 }
 
-function normalizeComplexitySteps(raw) {
-  if (!Array.isArray(raw)) return [];
-  return raw
-    .filter((s) => s && typeof s === "object" && s.op && s.cost)
-    .map((s) => ({ op: String(s.op), cost: String(s.cost) }));
-}
 
 /* ---------- Rendering ---------- */
 function renderPartial(accumulated, meta) {
@@ -753,9 +747,10 @@ function renderAnalysis(data, meta = {}, opts = {}) {
   els.result.innerHTML = `
     ${tagsHtml}
     <div class="metrics-grid">
-      ${renderComplexityCard("Time", data.timeComplexity, data.timeComplexityClass, data.timeComplexitySteps)}
-      ${renderComplexityCard("Space", data.spaceComplexity, data.spaceComplexityClass, data.spaceComplexitySteps)}
+      ${renderComplexityCard("Time", data.timeComplexity, data.timeComplexityClass)}
+      ${renderComplexityCard("Space", data.spaceComplexity, data.spaceComplexityClass)}
     </div>
+    ${renderComplexityReasoning(data.timeComplexityReasoning, data.spaceComplexityReasoning)}
     <h3>Approach</h3>
     ${approachMetaHtml}
     <p>${escMd(data.approach || (opts.partial ? "…" : ""))}</p>
@@ -827,39 +822,12 @@ function renderAnalysis(data, meta = {}, opts = {}) {
   });
 }
 
-function renderComplexityCard(title, text, className, steps) {
+function renderComplexityCard(title, text, className) {
   const rank = complexityRank(className || text);
   const samples = complexitySamples(rank);
   const { line, area } = sparklinePath(samples);
   const label = complexityLabel(className, text);
   const gid = `g-${title.toLowerCase()}`;
-
-  let stepsHtml = "";
-  if (Array.isArray(steps) && steps.length) {
-    const nonFinal = steps.filter((s) => s.op.toLowerCase() !== "final");
-    const final = steps.find((s) => s.op.toLowerCase() === "final");
-    stepsHtml = `
-      <div class="complexity-steps">
-        ${nonFinal.map((s, i) => {
-          const prefix = i === 0 ? "" : (s.combine === "×" || s.combine === "*" ? "×" : s.combine === "+" ? "+" : "");
-          const costHtml = prefix
-            ? `<span class="cstep-combine">${esc(prefix)}</span><span class="cstep-cost">${esc(s.cost)}</span>`
-            : `<span class="cstep-cost">${esc(s.cost)}</span>`;
-          return `
-          <div class="cstep">
-            <span class="cstep-op" title="${esc(s.op)}">${esc(s.op)}</span>
-            <button type="button" class="cstep-more" aria-label="expand">…more</button>
-            <span class="cstep-right">${costHtml}</span>
-          </div>`;
-        }).join("")}
-        ${final ? `<div class="cstep-divider"></div>
-          <div class="cstep cstep-final">
-            <span class="cstep-op">Overall</span>
-            <span class="cstep-right"><span class="cstep-cost">${esc(final.cost)}</span></span>
-          </div>` : ""}
-      </div>`;
-  }
-
   return `
     <div class="metric-card">
       <div class="metric-label"><span>${esc(title)}</span><span class="metric-value">${esc(label)}</span></div>
@@ -875,9 +843,28 @@ function renderComplexityCard(title, text, className, steps) {
         <path class="chart-line" d="M ${line.replace(/ /g, " L ").replace(/,/g, " ")}"/>
       </svg>
       <div class="timeline"><span>n=1</span><span>n=8</span><span>n=64</span><span>n=1k</span></div>
-      ${stepsHtml}
     </div>
   `;
+}
+
+function renderComplexityReasoning(timeR, spaceR) {
+  if (!timeR && !spaceR) return "";
+  const renderBullets = (text) => {
+    if (!text) return "";
+    // Split on newlines, render each "- label: cost — reason" line
+    return text.split(/\n/).map((line) => {
+      const trimmed = line.replace(/^[-•]\s*/, "").trim();
+      if (!trimmed) return "";
+      // Bold the "Overall" line
+      const isOverall = /^overall/i.test(trimmed);
+      return `<li class="${isOverall ? "cr-overall" : ""}">${escMd(trimmed)}</li>`;
+    }).filter(Boolean).join("");
+  };
+  return `
+    <div class="complexity-reasoning-block">
+      ${timeR ? `<div class="cr-section"><span class="cr-label">Time</span><ul class="cr-list">${renderBullets(timeR)}</ul></div>` : ""}
+      ${spaceR ? `<div class="cr-section"><span class="cr-label">Space</span><ul class="cr-list">${renderBullets(spaceR)}</ul></div>` : ""}
+    </div>`;
 }
 
 function renderCodeBlock(optCode, origCode, language) {
