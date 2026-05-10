@@ -42,14 +42,14 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 });
 
 chrome.commands.onCommand.addListener((command, tab) => {
-  if (!tab) return;
   if (command === "analyze-current") {
-    // Keyboard shortcut carries user gesture — synchronous open.
-    chrome.sidePanel.open({ tabId: tab.id, windowId: tab.windowId }).catch(() => {});
-    // Give the panel a moment to mount, then fire the analyze trigger.
-    setTimeout(() => {
-      broadcast({ type: "algolens:analyze-active", tabId: tab.id });
-    }, 300);
+    resolveActiveTab(tab).then((activeTab) => {
+      if (!activeTab) return;
+      chrome.sidePanel.open({ tabId: activeTab.id, windowId: activeTab.windowId }).catch(() => {});
+      setTimeout(() => {
+        broadcast({ type: "algolens:analyze-active", tabId: activeTab.id });
+      }, 600);
+    });
   }
 });
 
@@ -84,3 +84,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 function broadcast(payload) {
   chrome.runtime.sendMessage(payload).catch(() => {});
 }
+
+async function resolveActiveTab(tab) {
+  if (tab) return tab;
+  const [active] = await chrome.tabs.query({ active: true, currentWindow: true });
+  return active || null;
+}
+

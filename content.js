@@ -66,8 +66,6 @@
     };
   };
 
-  // Ask the MAIN-world helper for the full Monaco buffer (not scroll-limited).
-  // Returns a Promise that resolves to the code string.
   const extractCodeFromMonaco = () => new Promise((resolve) => {
     const timeout = setTimeout(() => resolve(null), 800);
     document.addEventListener("__algoLens:code", function handler(e) {
@@ -78,14 +76,10 @@
     document.dispatchEvent(new CustomEvent("__algoLens:getCode"));
   });
 
-  // DOM fallback — only gets visible lines (Monaco virtualizes rendering).
   const extractCodeFromDOM = () => {
-    // textarea.value is the full buffer for CodeMirror-style editors
     const ta = document.querySelector("textarea.inputarea") ||
                document.querySelector("textarea[data-mode-id]");
     if (ta && ta.value && ta.value.trim()) return ta.value.trim();
-
-    // .view-line scrape — last resort, may be incomplete on long files
     const lines = [...document.querySelectorAll(".view-lines .view-line")]
       .map((l) => l.innerText)
       .filter(Boolean);
@@ -93,44 +87,24 @@
   };
 
   const MODE_ID_MAP = {
-    cpp: "C++",
-    c: "C",
-    csharp: "C#",
-    java: "Java",
-    python: "Python",
-    python3: "Python3",
-    javascript: "JavaScript",
-    typescript: "TypeScript",
-    go: "Go",
-    rust: "Rust",
-    kotlin: "Kotlin",
-    swift: "Swift",
-    ruby: "Ruby",
-    scala: "Scala",
-    php: "PHP",
-    dart: "Dart",
-    elixir: "Elixir",
-    erlang: "Erlang",
-    racket: "Racket",
-    mysql: "MySQL"
+    cpp: "C++", c: "C", csharp: "C#", java: "Java",
+    python: "Python", python3: "Python3", javascript: "JavaScript",
+    typescript: "TypeScript", go: "Go", rust: "Rust", kotlin: "Kotlin",
+    swift: "Swift", ruby: "Ruby", scala: "Scala", php: "PHP",
+    dart: "Dart", elixir: "Elixir", erlang: "Erlang", racket: "Racket", mysql: "MySQL"
   };
 
   const LANG_WHITELIST = new Set(Object.values(MODE_ID_MAP));
 
   const extractLanguage = () => {
-    // Most reliable: Monaco editor annotates its root with data-mode-id.
     const monaco = document.querySelector(".monaco-editor [data-mode-id]");
     const modeId = monaco && monaco.getAttribute("data-mode-id");
     if (modeId && MODE_ID_MAP[modeId.toLowerCase()]) return MODE_ID_MAP[modeId.toLowerCase()];
-
-    // Fallback: scan buttons that look like the language picker — but only
-    // accept text that's actually a known language name.
     const candidates = document.querySelectorAll("button, [role='button'], span, div");
     for (const el of candidates) {
       const t = (el.innerText || "").trim();
       if (!t || t.length > 20) continue;
       if (LANG_WHITELIST.has(t)) return t;
-      // "C++" etc. might appear at the start of a larger "C++ v" label.
       for (const lang of LANG_WHITELIST) {
         if (t === lang) return lang;
         if (t.startsWith(lang + " ") || t.startsWith(lang + "\n")) return lang;
@@ -148,30 +122,21 @@
   const extractContext = async () => {
     const problem = getProblemMetadata();
     const language = extractLanguage();
-
-    // Try MAIN-world Monaco API first (full buffer, scroll-independent).
-    // Fall back to DOM scraping if the helper isn't ready yet.
     let code = await extractCodeFromMonaco();
     const source = code ? "monaco-api" : "dom-fallback";
     if (!code) code = extractCodeFromDOM();
-
     const result = {
-      ok: true,
-      problem,
-      code: code || "",
-      language,
+      ok: true, problem, code: code || "", language,
       extractionConfidence: extractionConfidence(code || "")
     };
     console.log("%c[Algo Lens/content]", "color:#7ee1ff", "extract:", {
-      slug: problem.slug,
-      title: problem.title,
-      language,
-      codeLength: (code || "").length,
-      source,
-      confidence: result.extractionConfidence
+      slug: problem.slug, title: problem.title, language,
+      codeLength: (code || "").length, source, confidence: result.extractionConfidence
     });
     return result;
   };
+
+  const BUTTON_ID = "algolens-inline-btn";
 
   /* ---------- Message bridge ---------- */
   chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
@@ -180,16 +145,15 @@
       extractContext()
         .then(sendResponse)
         .catch((error) => sendResponse({ ok: false, message: String(error && error.message || error) }));
-      return true; // keep message channel open for async response
+      return true;
     }
     return false;
   });
 
-  /* ---------- Inline analyze button ---------- */
-  const BUTTON_ID = "algolens-inline-btn";
-
+  /* ---------- Inline button ---------- */
   const createInlineButton = () => {
     if (document.getElementById(BUTTON_ID)) return;
+
     const btn = document.createElement("button");
     btn.id = BUTTON_ID;
     btn.type = "button";
@@ -199,13 +163,12 @@
       <span class="algolens-label">Analyze</span>
     `;
     btn.addEventListener("click", () => {
-      // No `await` here — `chrome.sidePanel.open()` in the SW must run in the
-      // same user-gesture tick as this click, so fire-and-forget the message.
       btn.classList.add("is-busy");
       chrome.runtime.sendMessage({ type: "algolens:open-side-panel" });
       chrome.runtime.sendMessage({ type: "algolens:request-analyze" });
       setTimeout(() => btn.classList.remove("is-busy"), 1200);
     });
+
     document.body.appendChild(btn);
   };
 
@@ -225,8 +188,8 @@
         const existing = document.getElementById(BUTTON_ID);
         if (/^\/problems\//.test(location.pathname)) {
           if (!existing) createInlineButton();
-        } else if (existing) {
-          existing.remove();
+        } else {
+          if (existing) existing.remove();
         }
       }
     });
