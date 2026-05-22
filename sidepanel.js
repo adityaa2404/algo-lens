@@ -58,7 +58,8 @@ function init() {
     "manualCode", "apiKey", "modelSelect", "streamToggle", "autoAnalyzeToggle",
     "saveBtn", "clearHistoryBtn", "toggleKey", "historySearch", "historyList",
     "historyEmpty", "toast", "privacyLink", "version",
-    "debugDump", "refreshDebug", "copyDebug", "clearDebug"
+    "debugDump", "refreshDebug", "copyDebug", "clearDebug",
+    "chatNoAnalysis", "chatHasAnalysis", "chatPreview", "discussBtn", "goAnalyzeBtn"
   ].forEach((id) => (els[id] = $(id)));
 
   els.version.textContent = chrome.runtime.getManifest().version;
@@ -77,6 +78,9 @@ function init() {
     e.preventDefault();
     chrome.tabs.create({ url: chrome.runtime.getURL("privacy.html") });
   });
+
+  els.discussBtn.addEventListener("click", discussOnChatGPT);
+  els.goAnalyzeBtn.addEventListener("click", () => switchTab("analyze"));
 
   els.refreshDebug.addEventListener("click", renderDebugDump);
   els.copyDebug.addEventListener("click", () => {
@@ -123,6 +127,96 @@ function switchTab(name) {
     view.classList.toggle("is-active", view.id === `view-${name}`);
   });
   if (name === "history") renderHistoryList();
+  if (name === "chat") renderChatPreview();
+}
+
+/* ---------- Chat tab ---------- */
+function renderChatPreview() {
+  if (!lastAnalysis) {
+    els.chatNoAnalysis.hidden = false;
+    els.chatHasAnalysis.hidden = true;
+    return;
+  }
+  els.chatNoAnalysis.hidden = true;
+  els.chatHasAnalysis.hidden = false;
+
+  const { analysis, meta } = lastAnalysis;
+  const problem = meta.problem || {};
+  const title = problem.frontendId
+    ? `#${problem.frontendId} — ${problem.title || "Unknown"}`
+    : (problem.title || "Unknown Problem");
+
+  const preview = [
+    `${title} [${meta.language || "unknown"}]`,
+    `TC: ${analysis.timeComplexity || "?"} | SC: ${analysis.spaceComplexity || "?"}`,
+    `Approach: ${analysis.currentApproach || "?"}`,
+    analysis.patternTags && analysis.patternTags.length
+      ? `Tags: ${analysis.patternTags.join(", ")}`
+      : null,
+    analysis.mistakesAndEdgeCases && analysis.mistakesAndEdgeCases.length
+      ? `Issues: ${analysis.mistakesAndEdgeCases.slice(0, 2).join("; ")}${analysis.mistakesAndEdgeCases.length > 2 ? "…" : ""}`
+      : null,
+  ].filter(Boolean).join("\n");
+
+  els.chatPreview.textContent = preview;
+}
+
+function normalizeIndent(code) {
+  if (!code) return "(code not available)";
+  const lines = code.split("\n");
+  const minIndent = lines
+    .filter((l) => l.trim().length > 0)
+    .reduce((min, l) => Math.min(min, l.match(/^(\s*)/)[1].length), Infinity);
+  return lines.map((l) => l.slice(minIndent)).join("\n").trimEnd();
+}
+
+function buildChatGPTPrompt(analysis, meta) {
+  const problem = meta.problem || {};
+  const title = problem.frontendId
+    ? `LeetCode #${problem.frontendId} — ${problem.title || "Unknown"}`
+    : (problem.title || "Unknown Problem");
+
+  const lines = [
+    `Problem: ${title}`,
+    `Language: ${meta.language || "unknown"}`,
+    ``,
+    `=== My Code ===`,
+    normalizeIndent(meta.code),
+    ``,
+    `=== Analysis ===`,
+    `Time Complexity: ${analysis.timeComplexity || "?"}`,
+    analysis.timeComplexityReasoning ? analysis.timeComplexityReasoning : null,
+    `Space Complexity: ${analysis.spaceComplexity || "?"}`,
+    analysis.spaceComplexityReasoning ? analysis.spaceComplexityReasoning : null,
+    ``,
+    `Current Approach: ${analysis.currentApproach || "?"}`,
+    analysis.suggestedApproach && analysis.suggestedApproach !== analysis.currentApproach
+      ? `Suggested Approach: ${analysis.suggestedApproach}` : null,
+    analysis.keyIdea ? `Key Idea: ${analysis.keyIdea}` : null,
+    ``,
+    analysis.approach ? `Explanation: ${analysis.approach}` : null,
+    ``,
+    analysis.patternTags && analysis.patternTags.length
+      ? `Patterns: ${analysis.patternTags.join(", ")}` : null,
+    analysis.mistakesAndEdgeCases && analysis.mistakesAndEdgeCases.length
+      ? `Issues / Edge Cases:\n${analysis.mistakesAndEdgeCases.map(m => `  - ${m}`).join("\n")}` : null,
+    ``,
+    `===`,
+    `Please read my code and the analysis above carefully. Once you have understood my approach, time complexity, and space complexity — tell me you're ready, and then wait for my doubts. Do not start explaining anything yet.`,
+  ].filter((l) => l !== null).join("\n");
+
+  return lines;
+}
+
+function discussOnChatGPT() {
+  if (!lastAnalysis) return;
+  const prompt = buildChatGPTPrompt(lastAnalysis.analysis, lastAnalysis.meta);
+  navigator.clipboard.writeText(prompt).then(() => {
+    alert("Prompt copied!\n\nWhen ChatGPT opens → press Ctrl+V then Enter.");
+    chrome.tabs.create({ url: "https://chatgpt.com" });
+  }).catch(() => {
+    toast("Could not copy — try again");
+  });
 }
 
 /* ---------- Status + toast ---------- */
